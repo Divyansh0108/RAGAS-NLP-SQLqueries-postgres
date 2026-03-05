@@ -1,32 +1,30 @@
 import json
-import os
 from pathlib import Path
 
 import chromadb
 from chromadb.utils.embedding_functions import OllamaEmbeddingFunction
 
-# ── Paths ────────────────────────────────────────────────────────────────────
-ROOT = Path(__file__).resolve().parents[1]
-SCHEMA_PATH = ROOT / "data" / "schema_docs" / "dvdrental_schema.json"
-EXAMPLES_PATH = ROOT / "data" / "examples" / "examples.jsonl"
-CHROMA_PATH = ROOT / "data" / "chroma_db"
+from src.config import get_settings
+
+# ── Configuration ─────────────────────────────────────────────────────────────
+settings = get_settings()
 
 # ── ChromaDB + Embedding Function ────────────────────────────────────────────
 embedding_fn = OllamaEmbeddingFunction(
-    url="http://localhost:11434/api/embeddings",
-    model_name="nomic-embed-text",
+    url=settings.embedding_url,
+    model_name=settings.embedding_model,
 )
 
-client = chromadb.PersistentClient(path=str(CHROMA_PATH))
+client = chromadb.PersistentClient(path=str(settings.chroma_path))
 
 # ── Collections ──────────────────────────────────────────────────────────────
 schema_col = client.get_or_create_collection(
-    name="schema_collection",
+    name=settings.schema_collection_name,
     embedding_function=embedding_fn,
 )
 
 examples_col = client.get_or_create_collection(
-    name="examples_collection",
+    name=settings.examples_collection_name,
     embedding_function=embedding_fn,
 )
 
@@ -34,7 +32,7 @@ examples_col = client.get_or_create_collection(
 # ── 1. Embed Schema ───────────────────────────────────────────────────────────
 def embed_schema():
     print("📂 Loading schema...")
-    with open(SCHEMA_PATH) as f:
+    with open(settings.schema_path) as f:
         schema = json.load(f)
 
     documents, metadatas, ids = [], [], []
@@ -68,7 +66,7 @@ def embed_examples():
     print("📂 Loading examples...")
     documents, metadatas, ids = [], [], []
 
-    with open(EXAMPLES_PATH) as f:
+    with open(settings.examples_path) as f:
         for line in f:
             ex = json.loads(line.strip())
             doc = f"Question: {ex['question']}\nSQL: {ex['sql']}"
@@ -110,7 +108,7 @@ def smoke_test():
 
 # ── Main ──────────────────────────────────────────────────────────────────────
 if __name__ == "__main__":
-    print(f"💾 ChromaDB will persist to: {CHROMA_PATH}\n")
+    print(f"💾 ChromaDB will persist to: {settings.chroma_path}\n")
     embed_schema()
     embed_examples()
     smoke_test()

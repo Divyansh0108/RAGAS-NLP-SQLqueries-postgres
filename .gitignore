@@ -31,6 +31,10 @@ data/evaluation/eval_*.json
 # Chainlit auto-generated translations
 .chainlit/translations/
 
+# Application logs
+logs/
+*.log
+
 # Scratch files
 sam.txt
 Response.txt

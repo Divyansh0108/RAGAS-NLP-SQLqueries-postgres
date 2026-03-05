@@ -3,19 +3,18 @@ import time
 from datetime import datetime
 from pathlib import Path
 
+from src.config import get_settings
 from src.db.executor import execute_sql
 from src.models.llm import CODELLAMA, QWEN, generate_sql
 
-# ── Paths ─────────────────────────────────────────────────────────────────────
-ROOT = Path(__file__).resolve().parents[2]
-EXAMPLES_PATH = ROOT / "data" / "examples" / "examples.jsonl"
-EVAL_OUTPUT_PATH = ROOT / "data" / "evaluation"
+# ── Configuration ─────────────────────────────────────────────────────────────
+settings = get_settings()
 
 
 # ── Load Examples ─────────────────────────────────────────────────────────────
 def load_examples() -> list[dict]:
     examples = []
-    with open(EXAMPLES_PATH) as f:
+    with open(settings.examples_path) as f:
         for line in f:
             examples.append(json.loads(line.strip()))
     return examples
@@ -149,7 +148,7 @@ def compute_metrics(results: list[dict]) -> dict:
 def save_results(results: list[dict], metrics: dict, model: str):
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     model_slug = model.replace(".", "_").replace(":", "_")
-    output_file = EVAL_OUTPUT_PATH / f"eval_{model_slug}_{timestamp}.json"
+    output_file = settings.evaluation_dir / f"eval_{model_slug}_{timestamp}.json"
 
     output = {
         "model": model,

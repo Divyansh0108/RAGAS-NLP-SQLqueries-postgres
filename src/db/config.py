@@ -1,23 +1,23 @@
-import os
-from dataclasses import dataclass
-from pathlib import Path
-from dotenv import load_dotenv
+"""
+Database configuration - now centralized in src.config.settings.
+This module is kept for backward compatibility.
+"""
 
-# Load .env from project root regardless of where the script is run from
-load_dotenv(dotenv_path=Path(__file__).resolve().parents[2] / ".env")
+from src.config import get_settings
 
+# Get settings instance
+_settings = get_settings()
 
-@dataclass
-class DatabaseConfig:
-    host: str = "localhost"
-    port: int = 5432
-    user: str = "divyanshpandey"
-    password: str = os.getenv("DB_PASSWORD", "")
-    database: str = "dvdrental"
-
-    @property
-    def connection_string(self) -> str:
-        return f"postgresql://{self.user}:{self.password}@{self.host}:{self.port}/{self.database}"
-
-
-db_config = DatabaseConfig()
+# Expose database config for backward compatibility
+db_config = type(
+    "DatabaseConfig",
+    (),
+    {
+        "host": _settings.db_host,
+        "port": _settings.db_port,
+        "user": _settings.db_user,
+        "password": _settings.db_password,
+        "database": _settings.db_name,
+        "connection_string": _settings.db_connection_string,
+    },
+)()
